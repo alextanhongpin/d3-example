@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>
+	Basic SVG
+	</title>
+
+
+<style type="text/css">
+	
+	path {
+		fill: none;
+		stroke: #9c9c9c;
+	}
+
+</style>
+</head>
+<body>
+
+
+	<script type="text/javascript" src='d3.min.js'></script>
+	<script type="text/javascript">
+		
+		'use strict';
+
+		var width = 960;
+		var height = 600;
+
+		var margins = {
+			top: 10,
+			left: 50,
+			right: 50,
+			bottom: 50,
+			between: 50
+		}
+
+		var bottomGraphHeight = 50;
+		var topGraphHeight = height - (margins.top + margins.bottom + margins.between + bottomGraphHeight);
+		var graphWidths = width - margins.left - margins.right;
+
+		var svg = d3.select('body')
+		.append('svg')
+		.attr('width', width)
+		.attr('height', height)
+
+		svg.append('defs')
+		.append('clipPath')
+		.attr('id', 'clip')
+		.append('rect')
+		.attr('width', width)
+		.attr('height', height)
+
+		const dateFormatter = d3.timeParse('%d-%b-%y');
+
+		var focus = svg.append('g')
+		.attr('transform', `translate(${ margins.left }, ${ margins.top })`)
+
+
+		var context = svg.append('g')
+		.attr('class', 'context')
+		.attr('transform', `translate(${ margins.left }, ${ margins.top + topGraphHeight + margins.between })`);
+
+		var xScaleTop = d3.scaleTime().range([0, graphWidths])
+		var xScaleBottom = d3.scaleTime().range([0, graphWidths]);
+		var yScaleTop = d3.scaleLinear().range([topGraphHeight, 0]);
+		var yScaleBottom = d3.scaleLinear().range([bottomGraphHeight, 0]);
+
+		var xAxisTop = d3.axisBottom().scale(xScaleTop);
+		var xAxisBottom = d3.axisBottom().scale(xScaleBottom);
+		var yAxisTop = d3.axisLeft().scale(yScaleTop);
+
+		var lineTop = d3.line()
+		.x(function (d) {
+			return xScaleTop(d.date);
+		})
+		.y(function(d) {
+			return yScaleTop(d.close);
+		});
+
+		var lineBottom = d3.line()
+		.x(function(d) {
+			return xScaleBottom(d.date)
+		})
+		.y(function(d) {
+			return yScaleBottom(d.close);
+		});
+
+
+		var brush = d3.brushX(xScaleBottom)
+		.on('brush', function () {
+  			var s = d3.event.selection;
+
+  			var d0 = s.map(xScaleBottom.invert, xScaleBottom)
+  	
+			xScaleTop.domain(!s ? xScaleBottom.domain() : d0);
+			focus.select('.x').call(xAxisTop)
+			focus.selectAll('.line')
+			.attr('d', d3.line()
+			.x(function(d) {
+				return xScaleTop(d.date)
+			})
+			.y(function (d) {
+				return yScaleTop(d.close)
+			}))
+		});
+
+
+
+    	var bisectDate = d3.bisector(function(d) {
+    		return d.date; 
+    	}).left;
+
+
+		d3.tsv('aapl.tsv', function (data) {
+
+
+		const fokus = svg.append('g')
+		.attr('class', 'focus')
+		.style('display', 'none')
+		fokus.append('circle')
+		.attr('r', 4.5)
+		.style('fill', 'transparent')
+		.style('stroke', 'red')
+
+		const line = svg.append('line')
+		.attr('y1', margins.top)
+		.attr('y2', topGraphHeight + margins.top)
+		.attr('stroke', 'black')
+
+
+		svg.append('rect')
+		.attr('class', 'overlay')
+		.attr('width', width)
+		.attr('transform', `translate(${ 0 }, 0)`)
+		.attr('height', topGraphHeight)
+		.attr('fill', 'transparent')
+		.on('mouseover', () => {
+			fokus.style('display', null)
+		})
+		.on('mouseout', () => {
+			fokus.style('display','none')
+		})
+		.on('mousemove', () => {
+
+			// Get the X-Value (Timescale)
+			const x0 = xScaleTop.invert(d3.event.offsetX - margins.left)
+			// Find the bisected index X-Value from the data
+			//const i = bisectDate(data, x0)
+
+			// Get the first negative value to estimate the index
+			 const i = data.findIndex((d) => {
+			 	const diff = new Date(d.date).getTime() - new Date(x0).getTime()
+			 	return diff < 0
+			 })
+			 // Got index, compare with the next or previous
+			const start = data[i];
+			const end = data[i + 1];
+			if (start && end) {
+				const d = x0 - start.date > end.date - x0 ? end : start
+				// const value = xAxisTop(x0)
+				//console.log(x0)
+				fokus
+				.transition()
+				.duration(50)
+				.attr('transform', `translate(${ xScaleTop(d.date) + margins.left }, ${ yScaleTop(d.close)})`)
+
+				line
+				.transition()
+				.duration(50)
+				.attr('x1', xScaleTop(d.date) + margins.left)
+				.attr('x2', xScaleTop(d.date) + margins.left)
+			}
+
+		})
+
+
+
+			data.forEach(function(d) {
+				d.date = dateFormatter(d.date);
+				d.close = +d.close;
+			});
+
+			// Extent gets the min and max value [min, max]
+			xScaleTop.domain(d3.extent(data, function (d) {
+				return d.date;
+			}))
+
+
+
+			yScaleTop.domain(d3.extent(data, function (d) {
+				return d.close;
+			}))
+
+			xScaleBottom.domain(d3.extent(data, function (d) {
+				return d.date;
+			}));
+
+			yScaleBottom.domain(d3.extent(data, function (d) {
+				return d.close;
+			}));
+
+
+			var topXAxisNodes = focus.append('g')
+			.attr('class', 'x axis')
+			.attr('transform', `translate(0, ${ margins.top + topGraphHeight })`)
+			.call(xAxisTop);
+
+			focus.append('path')
+			.datum(data)
+			.attr('class', 'line')
+    		.attr("clip-path", "url(#clip)")
+			.attr('d', lineTop);
+
+
+			var topYAxisNodes = focus.append('g')
+			.call(yAxisTop)
+
+			context.append('path')
+			.datum(data)
+			.attr('class', 'line')
+			.attr('d', lineBottom);
+
+			var bottomXAxisNodes = context.append('g')
+			.attr('transform', `translate(0, ${ bottomGraphHeight })`)
+			.call(xAxisBottom);
+
+			context.append('g')
+			.attr('class', 'x brush')
+			.call(brush)
+			.selectAll('rect')
+			.attr('y', -6)
+			.attr('height', bottomGraphHeight + 7);
+
+			context.selectAll('.extent')
+			.attr('stroke', 'black')
+			.attr('fill-opacity', 0.125)
+			.attr('shape-rendering', 'crispEdges')
+
+
+
+
+		});
+
+
+		
+
+	</script>
+
+
+</body>
+</html>

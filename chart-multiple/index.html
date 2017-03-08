@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Chart Multiple</title>
+	<style type="text/css">
+		
+		path.line {
+			fill: none;
+			stroke: steelblue;
+			stroke-width: 1.5px;
+
+		}
+		.legend {
+			stroke-width: 1.5px;
+		}
+		.area {
+		  fill: url(#temperature-gradient);
+		  stroke-width: 05px;
+		}
+
+		.axis path,
+		.axis line {
+		  fill: none;
+		  stroke: #000;
+		  shape-rendering: crispEdges;
+		}
+
+
+		svg {
+		}
+	</style>
+</head>
+<body>
+
+<button id='bar'>Draw Bar Chart</button>
+<button id='barUpdate'>Update Bar Chart</button>
+<button id='line'>Draw Line Chart</button>
+<button id='lineUpdate'>Update Line Chart</button>
+<button id='area'>Draw Area Chart</button>
+<button id='areaUpdate'>Update Area Chart</button>
+<button id='pie'>Draw Pie Chart</button>
+<button id='pieUpdate'>Update Pie Chart</button>
+<button id='group'>Group Bar</button>
+
+<button id='brush'>Draw Brush Chart</button>
+<button id='bubble'>Draw Bubble Chart</button>
+
+<script type="text/javascript" src='d3.min.js'></script>
+<script type="text/javascript" src='base.js'></script>
+<script type="text/javascript" src='bar.js'></script>
+<script type="text/javascript" src='group-bar.js'></script>
+<script type="text/javascript" src='line.js'></script>
+<script type="text/javascript" src='pie.js'></script>
+<script type="text/javascript" src='area.js'></script>
+<script type="text/javascript" src='brush.js'></script>
+<script type="text/javascript" src='bubble.js'></script>
+<script type="text/javascript" src='main.js'></script>
+</body>
+</html>

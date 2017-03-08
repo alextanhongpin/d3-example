@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>
+	Basic SVG
+	</title>
+</head>
+<body>
+
+
+	<script type="text/javascript" src='/d3.min.js'></script>
+	<script type="text/javascript">
+		
+		'use strict';
+
+		var zoomBehaviour = d3.zoom()
+		.scaleExtent([0.1, 10])
+		.on('zoom', function zoomed() {
+			svg.attr('transform', `translate(${ d3.event.transform.x }, ${d3.event.transform.y }) scale(${ d3.event.transform.k }, ${ d3.event.transform.k })`)
+		});
+
+		var svg = d3.select('body')
+		.append('svg')
+		.attr('width', 800)
+		.attr('height', 800)
+		.call(zoomBehaviour)
+		.call(dragBehaviour)
+		.append('g')
+
+
+		var label = svg.append('text')
+		.attr('x', 10)
+		.attr('y', 30)
+
+		svg.on('mousemove', function () {
+			var position = d3.mouse(svg.node());
+			label.text('X=' + position[0] + ', Y=' + position[1])
+		});
+
+		var data = [10, 20, 30]
+
+
+
+		var circle = svg.selectAll('circle')
+		.data(data)
+		.enter()
+		.append('circle')
+		.attr('cx', function (d, i) {
+			return d * 10 * i;
+		})
+		.attr('cy', 100)
+		.attr('r', function (d) {
+			return d;
+		})
+		.attr('fill', 'blue')
+		.attr('width', '10px')
+		.attr('height', '10px')
+
+
+		
+
+	</script>
+
+
+</body>
+</html>
